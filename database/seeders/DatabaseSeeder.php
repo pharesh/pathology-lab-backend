@@ -15,9 +15,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Do NOT wrap with bcrypt() — the User model's 'hashed' cast handles it.
+        // Passing an already-hashed string causes double-hashing and breaks login.
         User::firstOrCreate(
             ['email' => 'admin@pathlab.com'],
-            ['name' => 'Admin', 'password' => bcrypt('password')]
+            [
+                'name'     => 'Admin',
+                'password' => 'password',
+                'role'     => 'superadmin'
+            ]
         );
 
         $this->call(TestSeeder::class);

@@ -1,8 +1,9 @@
-services:
+hwservices:
   - type: web
     name: pathology-lab-backend
     runtime: docker
     dockerfilePath: ./Dockerfile
+    startCommand: ./docker-entrypoint.sh
     envVars:
       - key: APP_ENV
         value: production

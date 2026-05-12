@@ -10,6 +10,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
+RUN composer install --no-dev --optimize-autoloader
+
 RUN mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs \
     && chmod -R 775 bootstrap/cache storage
 

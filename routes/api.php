@@ -42,8 +42,9 @@ Route::prefix('v1')->group(function () {
             Route::get('labs',                     [SuperAdminController::class, 'labs']);
             Route::post('labs',                    [SuperAdminController::class, 'createLab']);
             Route::get('labs/{lab}',               [SuperAdminController::class, 'showLab']);
-            Route::patch('labs/{lab}/toggle',      [SuperAdminController::class, 'toggleLab']);
-            Route::post('labs/{lab}/subscription', [SubscriptionController::class, 'assign']);
+            Route::patch('labs/{lab}/toggle',                      [SuperAdminController::class, 'toggleLab']);
+            Route::patch('labs/{lab}/users/{user}/password',       [SuperAdminController::class, 'setUserPassword']);
+            Route::post('labs/{lab}/subscription',                 [SubscriptionController::class, 'assign']);
 
             Route::get('plans',            [PlanController::class, 'index']);
             Route::post('plans',           [PlanController::class, 'store']);

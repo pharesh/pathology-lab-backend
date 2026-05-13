@@ -164,6 +164,17 @@ class SuperAdminController extends Controller
         return response()->json(['is_active' => $lab->is_active]);
     }
 
+    public function setUserPassword(Request $request, Lab $lab, User $user): JsonResponse
+    {
+        abort_if($user->lab_id !== $lab->id, 403, 'User does not belong to this lab.');
+
+        $data = $request->validate(['password' => 'required|string|min:8']);
+
+        $user->update(['password' => Hash::make($data['password'])]);
+
+        return response()->json(['message' => 'Password updated successfully.']);
+    }
+
     private function subSummary(?Subscription $sub): array
     {
         if (!$sub) return ['status' => 'none', 'plan' => null, 'days_remaining' => 0];

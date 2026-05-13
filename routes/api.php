@@ -30,8 +30,9 @@ Route::prefix('v1')->group(function () {
     // ── Protected ────────────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
 
-        Route::post('auth/logout', [AuthController::class, 'logout']);
-        Route::get('auth/me',      [AuthController::class, 'me']);
+        Route::post('auth/logout',   [AuthController::class, 'logout']);
+        Route::get('auth/me',        [AuthController::class, 'me']);
+        Route::patch('auth/profile', [AuthController::class, 'updateProfile']);
 
         // Subscription status (for lab-facing app)
         Route::get('subscription/status', [SubscriptionController::class, 'myStatus']);
@@ -42,8 +43,11 @@ Route::prefix('v1')->group(function () {
             Route::get('labs',                     [SuperAdminController::class, 'labs']);
             Route::post('labs',                    [SuperAdminController::class, 'createLab']);
             Route::get('labs/{lab}',               [SuperAdminController::class, 'showLab']);
+            Route::patch('labs/{lab}',                             [SuperAdminController::class, 'updateLab']);
             Route::patch('labs/{lab}/toggle',                      [SuperAdminController::class, 'toggleLab']);
             Route::patch('labs/{lab}/users/{user}/password',       [SuperAdminController::class, 'setUserPassword']);
+            Route::post('labs/{lab}/users',                        [SuperAdminController::class, 'addLabUser']);
+            Route::delete('labs/{lab}/users/{user}',               [SuperAdminController::class, 'removeLabUser']);
             Route::post('labs/{lab}/subscription',                 [SubscriptionController::class, 'assign']);
 
             Route::get('plans',            [PlanController::class, 'index']);

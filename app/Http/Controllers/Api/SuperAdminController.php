@@ -158,6 +158,48 @@ class SuperAdminController extends Controller
         ]);
     }
 
+    public function updateLab(Request $request, Lab $lab): JsonResponse
+    {
+        $data = $request->validate([
+            'name'            => 'sometimes|string|max:150',
+            'email'           => 'sometimes|nullable|email|max:100|unique:labs,email,' . $lab->id,
+            'phone'           => 'sometimes|nullable|string|max:20',
+            'address'         => 'sometimes|nullable|string|max:500',
+            'registration_no' => 'sometimes|nullable|string|max:100',
+        ]);
+
+        $lab->update($data);
+        return response()->json(['lab' => $lab]);
+    }
+
+    public function addLabUser(Request $request, Lab $lab): JsonResponse
+    {
+        $data = $request->validate([
+            'name'     => 'required|string|max:150',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'role'     => 'required|in:admin,staff',
+        ]);
+
+        $user = User::create([
+            'lab_id'   => $lab->id,
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => Hash::make($data['password']),
+            'role'     => $data['role'],
+        ]);
+
+        return response()->json(['user' => $user], 201);
+    }
+
+    public function removeLabUser(Lab $lab, User $user): JsonResponse
+    {
+        abort_if($user->lab_id !== $lab->id, 403, 'User does not belong to this lab.');
+
+        $user->delete();
+        return response()->json(['message' => 'User removed.']);
+    }
+
     public function toggleLab(Lab $lab): JsonResponse
     {
         $lab->update(['is_active' => !$lab->is_active]);

@@ -13,11 +13,21 @@ class Lab extends Model
 
     protected $fillable = [
         'name', 'email', 'phone', 'address', 'registration_no', 'is_active',
+        'doctor_name', 'doctor_designation', 'signature_image',
     ];
+
+    protected $appends = ['signature_url'];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function getSignatureUrlAttribute(): ?string
+    {
+        return $this->signature_image
+            ? url('storage/' . $this->signature_image)
+            : null;
+    }
 
     public function users(): HasMany
     {

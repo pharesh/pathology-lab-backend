@@ -60,8 +60,10 @@ Route::prefix('v1')->group(function () {
         Route::middleware('subscription')->group(function () {
 
             // Lab
-            Route::get('lab',    [LabController::class, 'show']);
-            Route::patch('lab',  [LabController::class, 'update']);
+            Route::get('lab',              [LabController::class, 'show']);
+            Route::patch('lab',            [LabController::class, 'update']);
+            Route::post('lab/signature',   [LabController::class, 'uploadSignature']);
+            Route::delete('lab/signature', [LabController::class, 'deleteSignature']);
 
             // Users (admin manages team members)
             Route::get('users',           [UserController::class, 'index']);

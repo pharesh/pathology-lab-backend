@@ -10,6 +10,7 @@ use App\Services\SubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -27,19 +28,24 @@ class AuthController extends Controller
             'password'  => 'required|string|min:8|confirmed',
         ]);
 
-        $lab = Lab::create([
-            'name'  => $validated['lab_name'],
-            'email' => $validated['lab_email'] ?? null,
-            'phone' => $validated['lab_phone'] ?? null,
-        ]);
+        [$lab, $user] = DB::transaction(function () use ($validated) {
+            $lab = Lab::create([
+                'name'  => $validated['lab_name'],
+                'email' => $validated['lab_email'] ?? null,
+                'phone' => $validated['lab_phone'] ?? null,
+            ]);
 
-        $user = User::create([
-            'lab_id'   => $lab->id,
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => 'admin',
-        ]);
+            // Plain password — the 'hashed' cast on User handles bcrypt automatically
+            $user = User::create([
+                'lab_id'   => $lab->id,
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
+                'password' => $validated['password'],
+                'role'     => 'admin',
+            ]);
+
+            return [$lab, $user];
+        });
 
         // Auto-start 14-day trial on the Trial plan
         $trialPlan = Plan::where('slug', 'trial')->first();
@@ -112,7 +118,8 @@ class AuthController extends Controller
             if (!Hash::check($data['current_password'], $user->password)) {
                 return response()->json(['message' => 'Current password is incorrect.'], 422);
             }
-            $user->password = Hash::make($data['password']);
+            // Plain value — 'hashed' cast on User handles bcrypt automatically
+            $user->password = $data['password'];
         }
 
         if (isset($data['name'])) {

@@ -16,13 +16,13 @@ class ResultController extends Controller
     public function bulkStore(Request $request, Order $order): JsonResponse
     {
         $request->validate([
-            'entered_by'           => 'required|string|max:100',
-            'results'              => 'required|array',
-            'results.*.order_item_id' => 'required|exists:order_items,id',
-            'results.*.parameter_name' => 'required|string|max:100',
-            'results.*.observed_value' => 'required|string|max:100',
-            'results.*.unit'      => 'nullable|string|max:30',
-            'results.*.remarks'   => 'nullable|string',
+            'entered_by'                  => 'required|string|max:100',
+            'results'                     => 'required|array',
+            'results.*.order_item_id'     => 'required|exists:order_items,id',
+            'results.*.parameter_name'    => 'required|string|max:100',
+            'results.*.observed_value'    => 'required|string|max:100',
+            'results.*.unit'              => 'nullable|string|max:30',
+            'results.*.remarks'           => 'nullable|string',
         ]);
 
         $order->load(['patient', 'orderItems.test.referenceRanges']);
@@ -43,7 +43,8 @@ class ResultController extends Controller
             );
 
             $result = new Result($resultData);
-            $result->entered_by = $request->entered_by;
+            $result->entered_by  = $request->entered_by;
+            $result->entered_at  = now();
             $result->is_abnormal = $matchedRange ? $result->computeIsAbnormal($matchedRange) : false;
             $result->save();
 
@@ -51,7 +52,9 @@ class ResultController extends Controller
             $created[] = $result;
         }
 
-        $order->update(['status' => 'completed']);
+        // Only mark completed when every order item has results entered
+        $hasUnenteredItems = $order->orderItems()->where('status', '!=', 'result_entered')->exists();
+        $order->update(['status' => $hasUnenteredItems ? 'processing' : 'completed']);
 
         return response()->json(['results' => $created], 201);
     }
@@ -65,7 +68,16 @@ class ResultController extends Controller
             'entered_by'     => 'required|string|max:100',
         ]);
 
-        $result->update($request->only('observed_value', 'unit', 'remarks', 'entered_by'));
+        $result->fill($request->only('observed_value', 'unit', 'remarks', 'entered_by'));
+        $result->entered_at = now();
+
+        // Recompute abnormal flag after value change
+        $result->load('orderItem.test.referenceRanges');
+        $ranges = $result->orderItem?->test?->referenceRanges ?? collect();
+        $range = $ranges->first(fn($r) => strtolower($r->parameter_name) === strtolower($result->parameter_name));
+        $result->is_abnormal = $range ? $result->computeIsAbnormal($range) : false;
+
+        $result->save();
 
         return response()->json($result);
     }

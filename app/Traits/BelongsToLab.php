@@ -17,7 +17,7 @@ trait BelongsToLab
             if ($user && $user->role === 'superadmin') return;
             $labId = $user?->lab_id;
             if ($labId) {
-                $builder->where($builder->getModel()->getTable() . '.lab_id', $labId);
+                $builder->where('lab_id', $labId);
             }
         });
 
@@ -32,7 +32,7 @@ trait BelongsToLab
         });
     }
 
-    protected static function resolveCurrentLabId(): ?int
+    protected static function resolveCurrentLabId(): mixed
     {
         // Sanctum guard first (API & tests), then default guard fallback
         $user = Auth::guard('sanctum')->user() ?? Auth::user();

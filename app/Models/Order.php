@@ -4,10 +4,10 @@ namespace App\Models;
 
 use App\Traits\BelongsToLab;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Order extends Model
 {

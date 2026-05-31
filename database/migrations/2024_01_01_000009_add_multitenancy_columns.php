@@ -9,14 +9,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('lab_id')->nullable()->after('id')->constrained('labs')->nullOnDelete();
-            $table->enum('role', ['admin', 'staff'])->after('lab_id')->default('admin');
+        $isMongo = DB::getDriverName() === 'mongodb';
+
+        Schema::table('users', function (Blueprint $table) use ($isMongo) {
+            if ($isMongo) {
+                $table->index('lab_id');
+            } else {
+                $table->foreignId('lab_id')->nullable()->after('id')->constrained('labs')->nullOnDelete();
+                $table->enum('role', ['admin', 'staff'])->after('lab_id')->default('admin');
+            }
         });
 
         foreach (['patients', 'tests', 'orders', 'bills'] as $tbl) {
-            Schema::table($tbl, function (Blueprint $table) {
-                $table->foreignId('lab_id')->nullable()->after('id')->constrained('labs')->cascadeOnDelete();
+            Schema::table($tbl, function (Blueprint $table) use ($isMongo) {
+                if ($isMongo) {
+                    $table->index('lab_id');
+                } else {
+                    $table->foreignId('lab_id')->nullable()->after('id')->constrained('labs')->cascadeOnDelete();
+                }
             });
         }
 

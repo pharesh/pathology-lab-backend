@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('labs', function (Blueprint $table) {
-            $table->string('doctor_name')->nullable()->after('registration_no');
-            $table->string('doctor_designation')->nullable()->after('doctor_name');
-            $table->string('signature_image')->nullable()->after('doctor_designation');
+            $table->string('doctor_name')->nullable();
+            $table->string('doctor_designation')->nullable();
+            $table->string('signature_image')->nullable();
         });
     }
 

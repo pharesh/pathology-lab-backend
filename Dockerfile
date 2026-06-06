@@ -28,9 +28,14 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 # Build Vue.js / Inertia.js frontend assets
 RUN npm install && npm run build
 
+# Clear any config cache baked during build
+RUN php artisan config:clear || true
+
 EXPOSE 8000
 
-CMD php artisan config:cache && \
-    php artisan route:cache && \
+# ✅ config:clear at runtime forces Laravel to read fresh env vars from Render
+# ✅ NO config:cache — it would bake in empty MONGODB_URI
+CMD php artisan config:clear && \
+    php artisan route:clear && \
     php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

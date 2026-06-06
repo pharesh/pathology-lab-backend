@@ -14,21 +14,19 @@ return [
     | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
     */
+    'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie'],
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'allowed_origins' => [
+        'https://pathology-lab-frontend1.vercel.app',
+    ],
 
-    'allowed_methods' => ['*'],
-
+    // Or during testing, allow all:
     'allowed_origins' => ['*'],
 
-    'allowed_origins_patterns' => [],
-
+    'allowed_methods' => ['*'],
     'allowed_headers' => ['*'],
-
     'exposed_headers' => [],
-
     'max_age' => 0,
-
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

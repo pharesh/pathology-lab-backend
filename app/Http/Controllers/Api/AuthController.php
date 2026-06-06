@@ -73,7 +73,6 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-
         // Block deactivated labs
         if ($user->role !== 'superadmin' && $user->lab && !$user->lab->is_active) {
             Auth::logout();

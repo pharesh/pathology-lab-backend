@@ -32,10 +32,10 @@ return [
 
     'connections' => [
 
-        'mongodb' => [
-            'driver' => 'mongodb',
-            'dsn' => env('MONGODB_URI'),
-            'database' => env('DB_DATABASE', 'Patho_lab'),
+       'mongodb' => [
+            'driver'   => 'mongodb',
+            'dsn'      => env('MONGODB_URI'),
+            'database' => env('DB_DATABASE', 'pethol_lab'),
         ],
 
         'sqlite' => [

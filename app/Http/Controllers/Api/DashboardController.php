@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\Order;
 use App\Models\Patient;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
@@ -27,15 +28,18 @@ class DashboardController extends Controller
                 'ordered_at'   => $o->ordered_at,
             ]);
 
+        $todayStart  = Carbon::today()->startOfDay();
+        $todayEnd    = Carbon::today()->endOfDay();
+        $monthStart  = Carbon::now()->startOfMonth();
+        $monthEnd    = Carbon::now()->endOfMonth();
+
         return response()->json([
-            'patients_today'   => Patient::whereDate('created_at', today())->count(),
-            'orders_today'     => Order::whereDate('ordered_at', today())->count(),
+            'patients_today'   => Patient::whereBetween('created_at', [$todayStart, $todayEnd])->count(),
+            'orders_today'     => Order::whereBetween('ordered_at',  [$todayStart, $todayEnd])->count(),
             'pending_orders'   => Order::whereIn('status', ['pending', 'processing'])->count(),
             'unpaid_bills'     => Bill::where('payment_status', '!=', 'paid')->count(),
-            'revenue_today'    => Bill::whereDate('created_at', today())->sum('amount_paid'),
-            'revenue_month'    => Bill::whereMonth('created_at', now()->month)
-                                      ->whereYear('created_at', now()->year)
-                                      ->sum('amount_paid'),
+            'revenue_today'    => Bill::whereBetween('created_at', [$todayStart, $todayEnd])->sum('amount_paid'),
+            'revenue_month'    => Bill::whereBetween('created_at', [$monthStart, $monthEnd])->sum('amount_paid'),
             'total_patients'   => Patient::count(),
             'completed_orders' => Order::where('status', 'completed')->count(),
             'recent_orders'    => $recentOrders,

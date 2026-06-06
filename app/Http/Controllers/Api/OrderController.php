@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
 use App\Models\Test;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,7 +21,8 @@ class OrderController extends Controller
         }
 
         if ($request->filled('date')) {
-            $query->whereDate('ordered_at', $request->date);
+            $day = Carbon::parse($request->date);
+            $query->whereBetween('ordered_at', [$day->startOfDay(), $day->copy()->endOfDay()]);
         }
 
         if ($request->filled('patient_id')) {

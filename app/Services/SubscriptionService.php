@@ -67,11 +67,11 @@ class SubscriptionService
         if (!$sub || !$sub->isAccessible()) return false;
         $max = $sub->plan?->max_orders_per_month;
         if ($max === null) return true;
-        $count = $lab->orders()->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+        $count = $lab->orders()->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count();
         return $count < $max;
     }
 
-    public function assignPlan(Lab $lab, int $planId, string $status, array $options = []): Subscription
+    public function assignPlan(Lab $lab, string $planId, string $status, array $options = []): Subscription
     {
         // Cancel any existing subscription
         Subscription::where('lab_id', $lab->id)->whereNull('cancelled_at')->update(['cancelled_at' => now()]);

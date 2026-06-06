@@ -74,24 +74,33 @@ class SuperAdminController extends Controller
 
     public function stats(): JsonResponse
     {
-        $totalLabs        = Lab::count();
-        $activeSubs       = Subscription::where('status', 'active')->whereNull('cancelled_at')
-                                ->where('current_period_end', '>=', now())->count();
-        $trialSubs        = Subscription::where('status', 'trial')->whereNull('cancelled_at')
-                                ->where('trial_ends_at', '>=', now())->count();
-        $expiredSubs      = Subscription::whereIn('status', ['expired', 'trial'])
-                                ->where(function ($q) {
-                                    $q->where('trial_ends_at', '<', now()->subDays(3))
-                                      ->orWhere('current_period_end', '<', now()->subDays(3));
-                                })->whereNull('cancelled_at')->count();
-        $mrr              = Subscription::where('status', 'active')
-                                ->whereNull('cancelled_at')
-                                ->where('current_period_end', '>=', now())
-                                ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
-                                ->sum('plans.price_monthly');
+        $totalLabs   = Lab::count();
+        $activeSubs  = Subscription::where('status', 'active')->whereNull('cancelled_at')
+                           ->where('current_period_end', '>=', now())->count();
+        $trialSubs   = Subscription::where('status', 'trial')->whereNull('cancelled_at')
+                           ->where('trial_ends_at', '>=', now())->count();
+        $expiredSubs = Subscription::whereIn('status', ['expired', 'trial'])
+                           ->where(function ($q) {
+                               $q->where('trial_ends_at', '<', now()->subDays(3))
+                                 ->orWhere('current_period_end', '<', now()->subDays(3));
+                           })->whereNull('cancelled_at')->count();
+
+        // MongoDB doesn't support SQL JOINs — load active subs with plans and sum in PHP
+        $mrr = Subscription::where('status', 'active')
+                   ->whereNull('cancelled_at')
+                   ->where('current_period_end', '>=', now())
+                   ->with('plan')
+                   ->get()
+                   ->sum(fn($sub) => $sub->plan?->price_monthly ?? 0);
+
         $totalPatients    = Patient::withoutGlobalScopes()->count();
         $totalOrders      = Order::withoutGlobalScopes()->count();
-        $newLabsThisMonth = Lab::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+
+        // MongoDB doesn't support whereMonth/whereYear — use whereBetween with Carbon
+        $newLabsThisMonth = Lab::whereBetween('created_at', [
+            now()->startOfMonth(),
+            now()->endOfMonth(),
+        ])->count();
 
         $recentLabs = Lab::with(['subscription.plan'])
             ->latest()
@@ -121,8 +130,8 @@ class SuperAdminController extends Controller
 
     public function labs(): JsonResponse
     {
-        $labs = Lab::with(['subscription.plan'])
-            ->withCount(['users', 'patients', 'orders'])
+        // MongoDB doesn't support withCount() — load users eagerly and count patients/orders separately
+        $labs = Lab::with(['subscription.plan', 'users'])
             ->latest()
             ->get()
             ->map(fn($lab) => [
@@ -132,9 +141,9 @@ class SuperAdminController extends Controller
                 'phone'          => $lab->phone,
                 'is_active'      => $lab->is_active,
                 'created_at'     => $lab->created_at,
-                'users_count'    => $lab->users_count,
-                'patients_count' => $lab->patients_count,
-                'orders_count'   => $lab->orders_count,
+                'users_count'    => $lab->users->count(),
+                'patients_count' => Patient::withoutGlobalScopes()->where('lab_id', $lab->id)->count(),
+                'orders_count'   => Order::withoutGlobalScopes()->where('lab_id', $lab->id)->count(),
                 'subscription'   => $this->subSummary($lab->subscription),
             ]);
 

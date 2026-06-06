@@ -17,7 +17,7 @@ return [
     'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie'],
 
     'allowed_origins' => [
-        'https://pathology-lab-frontend1.vercel.app',
+        'https://pathology-lab-backend-5x4q.onrender.com',
     ],
 
     // Or during testing, allow all:
